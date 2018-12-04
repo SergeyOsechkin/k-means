@@ -1,10 +1,9 @@
 import numpy as np
 from PIL import Image
-from matplotlib import pyplot as plt
-import cv2
+import os
 
 
-class Segmentation:
+class KMeans:
     def __init__(self, filepath, number_clusters=3):
         img = Image.open(filepath).convert('RGB')
         self.pixels = np.float32(img).reshape(-1, 3)
@@ -12,10 +11,16 @@ class Segmentation:
 
     def kmeans(self):
         n = self.pixels.shape[0]
-        c = self.pixels.shape[1]  # Number of features in the data
-        centers = np.random.randn(self.k, c)
+        centers = [self.pixels[0].tolist()]
+        for value in self.pixels.tolist():
+            if value not in centers:
+                centers.append(value)
+            if len(centers) == self.k:
+                break
+
+        centers = np.array(centers)
         distances = np.zeros((n, self.k))
-        maxiter = 1
+        maxiter = 5
 
         for i in range(maxiter):
 
@@ -31,24 +36,24 @@ class Segmentation:
             # assigned data point classes
             for c in range(self.k):
                 pix_class = self.pixels[classes == c]
-                centers[c] = np.mean(pix_class, 0)
+                centers[c] = np.average(pix_class, 0)
 
         return classes, centers
 
 
 if __name__ == '__main__':
-    FILE_IN = '../drosophila_kc167_1_images/CPvalid1_48_40x_Tiles_p0003DAPI.TIF'
-    K = [2, 5, 7, 9]
-    img = cv2.imread(FILE_IN)
-    Z = img.reshape((-1, 3))
-    for number_clusters in K:
-        segm = Segmentation(FILE_IN, number_clusters)
-        label, center = segm.kmeans()
+    dir_from = '../drosophila_kc167_1_images'
+    dir_to = '../KMeansResults'
+    number_clusters = [2, 4, 6, 8]
+    for file_name in os.listdir(dir_from):
+        path_file = dir_from + '/' + file_name
+        name_without_extension = file_name[:-4]
+        dir_save = dir_to + '/' + name_without_extension + '/'
+        os.mkdir(dir_save)
+        for K in number_clusters:
+            label, center = KMeans(path_file, K).kmeans()
 
-        center = np.uint8(center)
-        res = center[label.flatten()]
-        res2 = res.reshape((512, 512, 3))
-        plt.imshow(res2)
-        plt.show()
-
+            center = np.uint8(center)
+            res = center[label].reshape((512, 512, 3))
+            Image.fromarray(res, 'RGB').save(dir_save + str(K) + '.bmp')
 
