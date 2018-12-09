@@ -42,6 +42,14 @@ class KMeans:
 
 
 if __name__ == '__main__':
+    path_file = '../drosophila_kc167_1_images/CPvalid1_48_40x_Tiles_p0003DAPI.TIF'
+    img = Image.open(path_file).convert('RGB')
+    from sklearn.cluster import KMeans as KM
+
+    kmean = KM()
+
+
+    exit()
     dir_from = '../drosophila_kc167_1_images'
     dir_to = '../KMeansResults'
     number_clusters = [2, 4, 6, 8]
