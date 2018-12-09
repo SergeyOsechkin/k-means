@@ -7,7 +7,7 @@ def euclid_distance(x, xi):
     return np.sqrt(np.sum((x - xi)**2))
 
 
-def neighbourhood_points(X, x_centroid, distance = 5):
+def neighbourhood_points(X, x_centroid, distance=5):
     eligible_X = []
     for x in X:
         distance_between = euclid_distance(x, x_centroid)
@@ -22,14 +22,13 @@ def gaussian_kernel(distance, bandwidth):
     return val
 
 
-if __name__ == '__main__':
+def means_shift():
     dir_from = '../drosophila_kc167_1_images'
     dir_to = '../MeanShiftResults'
     path_file = '../drosophila_kc167_1_images/CPvalid1_48_40x_Tiles_p0003DAPI.TIF'
     img = Image.open(path_file).convert('RGB')
     pixels = np.float32(img).reshape(-1, 3)
     n_iterations = 5
-    past_X = []
     for it in range(n_iterations):
         print("Begin iteration with number ", it)
         for i, x in enumerate(pixels):
@@ -54,8 +53,52 @@ if __name__ == '__main__':
                 res = pixels.reshape((512, 512, 3))
                 Image.fromarray(res, 'RGB').show()
                 exit()
-        past_X.append(np.copy(pixels))
         print("The end iteration with number ", it)
 
     res = pixels.reshape((512, 512, 3))
     Image.fromarray(res, 'RGB').show()
+
+
+if __name__ == '__main__':
+    import numpy as np
+    from sklearn.cluster import MeanShift, estimate_bandwidth
+    from sklearn.datasets.samples_generator import make_blobs
+
+    # #############################################################################
+    # Generate sample data
+    centers = [[1, 1], [-1, -1], [1, -1]]
+    X, _ = make_blobs(n_samples=10000, centers=centers, cluster_std=0.6)
+
+    # #############################################################################
+    # Compute clustering with MeanShift
+
+    # The following bandwidth can be automatically detected using
+    bandwidth = estimate_bandwidth(X, quantile=0.2, n_samples=500)
+
+    ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+    ms.fit(X)
+    labels = ms.labels_
+    cluster_centers = ms.cluster_centers_
+
+    labels_unique = np.unique(labels)
+    n_clusters_ = len(labels_unique)
+
+    print("number of estimated clusters : %d" % n_clusters_)
+
+    # #############################################################################
+    # Plot result
+    import matplotlib.pyplot as plt
+    from itertools import cycle
+
+    plt.figure(1)
+    plt.clf()
+
+    colors = cycle('bgrcmykbgrcmykbgrcmykbgrcmyk')
+    for k, col in zip(range(n_clusters_), colors):
+        my_members = labels == k
+        cluster_center = cluster_centers[k]
+        plt.plot(X[my_members, 0], X[my_members, 1], col + '.')
+        plt.plot(cluster_center[0], cluster_center[1], 'o', markerfacecolor=col,
+                 markeredgecolor='k', markersize=14)
+    plt.title('Estimated number of clusters: %d' % n_clusters_)
+    plt.show()

@@ -1,6 +1,9 @@
 import numpy as np
 from PIL import Image
 import os
+import time
+from sklearn.cluster import KMeans as KM
+from matplotlib import pyplot as plt
 
 
 class KMeans:
@@ -42,26 +45,30 @@ class KMeans:
 
 
 if __name__ == '__main__':
-    path_file = '../drosophila_kc167_1_images/CPvalid1_48_40x_Tiles_p0003DAPI.TIF'
-    img = Image.open(path_file).convert('RGB')
-    from sklearn.cluster import KMeans as KM
-
-    kmean = KM()
-
-
-    exit()
     dir_from = '../drosophila_kc167_1_images'
     dir_to = '../KMeansResults'
-    number_clusters = [2, 4, 6, 8]
+    number_clusters = [i for i in range(2, 70, 2)]  #[2, 4, 6, 8, 10, 12, 14, 16]
     for file_name in os.listdir(dir_from):
+        array_time = []
         path_file = dir_from + '/' + file_name
         name_without_extension = file_name[:-4]
         dir_save = dir_to + '/' + name_without_extension + '/'
-        os.mkdir(dir_save)
+        # os.mkdir(dir_save)
+        data = KMeans(path_file).pixels
+        sse = []
         for K in number_clusters:
-            label, center = KMeans(path_file, K).kmeans()
-
-            center = np.uint8(center)
-            res = center[label].reshape((512, 512, 3))
-            Image.fromarray(res, 'RGB').save(dir_save + str(K) + '.bmp')
-
+            path_file = '../drosophila_kc167_1_images/CPvalid1_48_40x_Tiles_p0003DAPI.TIF'
+            #label, center = KMeans(path_file, K).kmeans()
+            km = KM(K)
+            km.fit(data)
+            sse.append(km.inertia_)
+        # Plot sse against k
+        plt.figure(figsize=(6, 6))
+        plt.plot(number_clusters, sse, '-o')
+        plt.xlabel(r'Number of clusters *k*')
+        plt.ylabel('Sum of squared distance');
+        plt.show()
+        exit()
+            # center = np.uint8(center)
+            # res = center[label].reshape((512, 512, 3))
+            # Image.fromarray(res, 'RGB').save(dir_save + str(K) + '.bmp')
