@@ -52,9 +52,9 @@ K - число кластеров
 H - Радиус нахождения соседей
 Вывод:
 Clust - Количество кластеров
-![shiftmeans](shiftmeansExample.jpg)
+![shiftmeans](shiftmeansExample.png)
 
-![ResultShiftMeans](ResultShiftMeans.png)
+![ResultShiftMeans](shiftmeansResult.jpg)
 
 # Литература
 
